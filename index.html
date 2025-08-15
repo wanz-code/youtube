@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YouTube Downloader - Wanz Official</title>
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(270deg, #ff0040, #3300ff, #00ffaa);
+        background-size: 600% 600%;
+        animation: gradientBG 15s ease infinite;
+        color: #fff;
+        text-align: center;
+    }
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    h1 {
+        margin-top: 20px;
+        font-size: 26px;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+    }
+    .container {
+        margin-top: 30px;
+        background: rgba(0,0,0,0.5);
+        padding: 20px;
+        border-radius: 15px;
+        display: inline-block;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+    input, select, button {
+        width: 90%;
+        padding: 12px;
+        margin: 10px auto;
+        border-radius: 8px;
+        border: none;
+        font-size: 16px;
+    }
+    input, select {
+        background: #fff;
+        color: #000;
+    }
+    button {
+        background: #ff0040;
+        color: white;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: background 0.3s;
+    }
+    button:hover { background: #cc0033; }
+    button:after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 0;
+        left: 0;
+        bottom: 0;
+        background: rgba(255,255,255,0.2);
+        transition: height 0.3s;
+    }
+    button:hover:after { height: 100%; }
+    .loading {
+        display: none;
+        margin-top: 10px;
+    }
+    .spinner {
+        border: 4px solid rgba(255,255,255,0.3);
+        border-top: 4px solid #fff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: auto;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .preview {
+        margin-top: 20px;
+    }
+    .preview img, .preview video {
+        max-width: 100%;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.9);
+        padding: 20px;
+        border-radius: 15px;
+        z-index: 999;
+        color: #fff;
+        max-width: 300px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.8);
+        animation: popupFade 0.3s ease;
+    }
+    @keyframes popupFade {
+        from { opacity: 0; transform: translate(-50%, -40%); }
+        to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+    .footer {
+        margin-top: 30px;
+        font-size: 14px;
+        opacity: 0.8;
+    }
+</style>
+</head>
+<body>
+
+<h1>🎬 YouTube Downloader 🎶</h1>
+<div class="container">
+    <input type="text" id="url" placeholder="Masukkan URL YouTube">
+    <select id="format">
+        <option value="mp4">MP4 (Video)</option>
+        <option value="mp3">MP3 (Audio)</option>
+    </select>
+    <button onclick="getData()">Ambil Data</button>
+    <div class="loading">
+        <div class="spinner"></div>
+        <p>Memproses...</p>
+    </div>
+    <div class="preview" id="preview"></div>
+</div>
+
+<div class="popup" id="popup"></div>
+
+<div class="footer">© Wanz Official</div>
+
+<script>
+function showPopup(msg) {
+    const popup = document.getElementById("popup");
+    popup.innerHTML = msg;
+    popup.style.display = "block";
+    setTimeout(() => { popup.style.display = "none"; }, 3000);
+}
+
+function getData() {
+    const url = document.getElementById("url").value;
+    const format = document.getElementById("format").value;
+    if (!url) return showPopup("URL tidak boleh kosong!");
+    
+    document.querySelector(".loading").style.display = "block";
+    document.getElementById("preview").innerHTML = "";
+
+    fetch(`https://api.ownblox.my.id/api/ytdl?url=${encodeURIComponent(url)}&type=${format}`)
+    .then(res => res.json())
+    .then(data => {
+        document.querySelector(".loading").style.display = "none";
+        if (!data.status) return showPopup("Gagal mengambil data!");
+        
+        let result = data.result;
+        let html = `<h3>${result.title}</h3>
+                    <img src="${result.thumbnail}" alt="Thumbnail">
+                    <p>Durasi: ${Math.floor(result.duration/60)} menit</p>`;
+        
+        if (format === "mp4" && result.video_download) {
+            html += `<video controls src="${result.video_download}" style="margin-top:10px;"></video><br>
+                     <a href="${result.video_download}" target="_blank">
+                        <button>Download MP4</button>
+                     </a>`;
+        } else if (format === "mp3" && result.audio_download) {
+            html += `<audio controls src="${result.audio_download}" style="margin-top:10px;"></audio><br>
+                     <a href="${result.audio_download}" target="_blank">
+                        <button>Download MP3</button>
+                     </a>`;
+        }
+        
+        document.getElementById("preview").innerHTML = html;
+    })
+    .catch(err => {
+        document.querySelector(".loading").style.display = "none";
+        showPopup("Terjadi kesalahan!");
+        console.error(err);
+    });
+}
+</script>
+
+</body>
+</html>
